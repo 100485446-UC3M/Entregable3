@@ -1,5 +1,4 @@
 #include "claves.h"
-#include <rpc/rpc.h> // Necesario para RPC
 #include "tuplas.h"  // Generado por rpcgen
 
 //Definir mutex, variable condicional y variable global de sincronización 'busy'
@@ -45,14 +44,11 @@ int * set_value_1_svc(set_modify_args *args, struct svc_req *rqstp) {
 
 get_value_res * get_value_1_svc(int *key, struct svc_req *rqstp) {
     // RPC requiere devolver un puntero a estático o malloc'd.
-    // Usaremos estático aquí, pero cuidado con la concurrencia si rpcgen
-    // no genera un servidor multihilo automáticamente.
     static get_value_res result;
     // Liberar memoria de la llamada anterior si era dinámica (strings, arrays)
     // xdr_free puede ser útil aquí si se usó malloc en la anterior llamada.
     // Con 'static result', debemos limpiar los punteros internos manualmente si apuntan a memoria dinámica.
     // Si value1 y value2_val apuntaban a memoria dinámica, hay que liberarla ANTES de reutilizar 'result'.
-    // Ejemplo simplificado asumiendo que la función backend gestiona la memoria o usa buffers locales:
     if (result.value1 != NULL) {
        free(result.value1); // Si backend devolvió malloc'd string
        result.value1 = NULL;
@@ -66,29 +62,29 @@ get_value_res * get_value_1_svc(int *key, struct svc_req *rqstp) {
 
     // Necesitamos buffers temporales para llamar a la función backend get_value
     // ya que la firma original usa punteros para devolver valores.
-    char temp_value1[256]; // Tamaño adecuado según la API original
+    char temp_value1[256]; 
     int temp_n_value2;
-    double temp_v_value2[32]; // Tamaño adecuado según la API original
+    double temp_v_value2[32]; 
     struct Coord temp_value3;
 
     result.status = get_value(*key, temp_value1, &temp_n_value2, temp_v_value2, &temp_value3);
 
-    if (result.status == 0) { // Éxito
+    if (result.status == 0) { 
         // Copiar datos a la estructura de resultado RPC. ¡Cuidado con la memoria!
         // Para strings y arrays variables, RPC necesita que asignemos memoria que él pueda gestionar/liberar (o usar static).
         // Si usamos 'static result', debemos asignar memoria para los punteros internos.
         result.value1 = strdup(temp_value1); // strdup usa malloc
-        if (!result.value1) { /* Manejar error de memoria */ result.status = -1; /* O un error específico */ }
+        if (!result.value1) { result.status = -1; }
 
         result.value2.value2_len = temp_n_value2;
         if (temp_n_value2 > 0) {
             result.value2.value2_val = (double *)malloc(temp_n_value2 * sizeof(double));
-            if (!result.value2.value2_val) { /* Manejar error */ result.status = -1; free(result.value1); }
+            if (!result.value2.value2_val) { result.status = -1; free(result.value1); }
             else {
                memcpy(result.value2.value2_val, temp_v_value2, temp_n_value2 * sizeof(double));
             }
         } else {
-            result.value2.value2_val = NULL; // Importante si len es 0
+            result.value2.value2_val = NULL; /
         }
         result.value3 = temp_value3;
 
@@ -126,9 +122,6 @@ int * modify_value_1_svc(set_modify_args *args, struct svc_req *rqstp) {
 /* main del servidor - Puede ser el generado por rpcgen o uno simple */
 int main (int argc, char **argv) {
     printf("SERVIDOR RPC: Iniciando...\n");
-
-    // Podría haber una llamada a init() del backend aquí si es necesaria
-    // if (init() != 0) { fprintf(stderr, "Error inicializando backend.\n"); exit(1); }
 
     // Eliminar registro previo (útil durante desarrollo)
 	(void)pmap_unset (TUPLAS_PROG, TUPLAS_VERS);

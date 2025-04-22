@@ -1,6 +1,4 @@
 #include "claves.h"
-#include "servidor_y_proxy.h"
-#include <rpc/rpc.h>
 #include "tuplas.h" // Generado por rpcgen
 
 
@@ -8,12 +6,9 @@
 static CLIENT *get_rpc_client(const char *host) {
     CLIENT *clnt = clnt_create(host, TUPLAS_PROG, TUPLAS_VERS, "tcp");
     if (clnt == NULL) {
-        clnt_pcreateerror(host); // Imprime el error RPC detallado
-        // Considerar no imprimir directamente desde una biblioteca,
-        // quizás solo devolver un código de error.
-        // fprintf(stderr, "CLIENTE: Error al crear handle RPC para %s\n", host);
-    }
+        clnt_pcreateerror(host); 
     return clnt;
+}
 }
 
 // Implementación de la API pública (misma firma que en claves.h) 
@@ -50,11 +45,11 @@ int delete_key(int key) {
     int *result;
      char *host;
 
-    if ((host = getenv("IP_TUPLAS")) == NULL) { /* ... error handling ... */ return ERROR_COMMUNICATION; }
-    if ((clnt = get_rpc_client(host)) == NULL) { /* ... error handling ... */ return ERROR_COMMUNICATION; }
+    if ((host = getenv("IP_TUPLAS")) == NULL) {  return ERROR_COMMUNICATION; }
+    if ((clnt = get_rpc_client(host)) == NULL) {  return ERROR_COMMUNICATION; }
 
     result = delete_key_1(&key, clnt);
-    if (result == (int *) NULL) { /* ... error handling RPC ... */ clnt_destroy(clnt); return ERROR_COMMUNICATION; }
+    if (result == (int *) NULL) {  clnt_destroy(clnt); return ERROR_COMMUNICATION; }
 
     int retval = *result;
     clnt_destroy(clnt);
@@ -66,11 +61,11 @@ int exist(int key) {
     int *result;
      char *host;
 
-    if ((host = getenv("IP_TUPLAS")) == NULL) { /* ... error handling ... */ return ERROR_COMMUNICATION; }
-    if ((clnt = get_rpc_client(host)) == NULL) { /* ... error handling ... */ return ERROR_COMMUNICATION; }
+    if ((host = getenv("IP_TUPLAS")) == NULL) {  return ERROR_COMMUNICATION; }
+    if ((clnt = get_rpc_client(host)) == NULL) {  return ERROR_COMMUNICATION; }
 
     result = exist_1(&key, clnt);
-     if (result == (int *) NULL) { /* ... error handling RPC ... */ clnt_destroy(clnt); return ERROR_COMMUNICATION; }
+     if (result == (int *) NULL) { clnt_destroy(clnt); return ERROR_COMMUNICATION; }
 
     int retval = *result;
     clnt_destroy(clnt);
@@ -94,7 +89,7 @@ int set_value(int key, char *value1, int N_value2, double *V_value2, struct Coor
     args.value3 = value3;
 
     result = set_value_1(&args, clnt);
-    if (result == (int *) NULL) { /* ... error handling RPC ... */ clnt_destroy(clnt); return ERROR_COMMUNICATION; }
+    if (result == (int *) NULL) { clnt_destroy(clnt); return ERROR_COMMUNICATION; }
 
     int retval = *result;
     clnt_destroy(clnt);
@@ -112,8 +107,8 @@ int get_value(int key, char *value1, int *N_value2, double *V_value2, struct Coo
          return -1; // O un código de error apropiado
     }
 
-    if ((host = getenv("IP_TUPLAS")) == NULL) { /* ... */ return ERROR_COMMUNICATION; }
-    if ((clnt = get_rpc_client(host)) == NULL) { /* ... */ return ERROR_COMMUNICATION; }
+    if ((host = getenv("IP_TUPLAS")) == NULL) { return ERROR_COMMUNICATION; }
+    if ((clnt = get_rpc_client(host)) == NULL) {  return ERROR_COMMUNICATION; }
 
     result = get_value_1(&key, clnt);
     if (result == (get_value_res *) NULL) {
