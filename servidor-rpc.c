@@ -1,11 +1,6 @@
 #include "claves.h"
 #include "tuplas.h"  // Generado por rpcgen
 
-//Definir mutex, variable condicional y variable global de sincronización 'busy'
-pthread_mutex_t mutex2;
-pthread_cond_t cond;
-int busy;
-
 // Estructura para pasar datos al hilo
 struct thread_data {
     SVCXPRT *transp;

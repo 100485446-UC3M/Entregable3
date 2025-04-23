@@ -116,6 +116,7 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c $(HEADER_SRC) $(INCL_DEF_SRC) $(SERV_PROX_SRC)
 clean:
 	@echo "Limpiando los archivos generados"
 	rm -rf $(OBJ_DIR) $(BIN_DIR)
+    rm -f *.o servidor-rpc proxy-rpc tuplas_clnt.c tuplas_svc.c tuplas_xdr.c tuplas.h
 
 # Eliminar todo, incluyendo los archivos generados
 distclean: clean

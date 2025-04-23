@@ -157,7 +157,6 @@ int get_value(int key, char *value1, int *N_value2, double *V_value2, struct Coo
     }
 
     // Liberar memoria asignada por la capa RPC cliente para el resultado
-    // Esto es crucial para evitar fugas de memoria, especialmente para strings y arrays.
     xdr_free((xdrproc_t)xdr_get_value_res, (char *)result);
 
     clnt_destroy(clnt);
