@@ -81,7 +81,6 @@ $(LIBRARY_NAME): $(PROXY_OBJ)
 	@mkdir -p $(BIN_DIR)
 	$(CC) -shared -o $(BIN_DIR)/$(LIBRARY_NAME) $(PROXY_OBJ) $(LDFLAGS)
 
-
 $(SERVIDOR_RPC_EXEC): $(CLAVES_OBJ) $(SERVER_OBJ)
 	@mkdir -p $(BIN_DIR)
 	@echo "Compilando el servidor $(SERVIDOR_RPC_EXEC)"

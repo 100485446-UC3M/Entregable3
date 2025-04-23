@@ -11,7 +11,7 @@ static CLIENT *get_rpc_client(const char *host) {
 }
 }
 
-// Implementación de la API pública (misma firma que en claves.h) 
+// Implementación de la API pública 
 
 int destroy(void) {
     CLIENT *clnt;
@@ -27,7 +27,8 @@ int destroy(void) {
         return ERROR_COMMUNICATION;
     }
 
-    result = destroy_1(NULL, clnt); // Llama al stub RPC cliente
+    // Llama al stub RPC cliente, aquí está la información con respecto a la función que queremos ejecutar
+    result = destroy_1(NULL, clnt); 
     if (result == (int *) NULL) {
         // Error en la llamada RPC
         clnt_perror(clnt, "CLIENTE: Fallo en llamada RPC a destroy");
@@ -170,8 +171,8 @@ int modify_value(int key, char *value1, int N_value2, double *V_value2, struct C
     char *host;
     set_modify_args args;
 
-    if ((host = getenv("IP_TUPLAS")) == NULL) { /* ... */ return ERROR_COMMUNICATION; }
-    if ((clnt = get_rpc_client(host)) == NULL) { /* ... */ return ERROR_COMMUNICATION; }
+    if ((host = getenv("IP_TUPLAS")) == NULL) { return ERROR_COMMUNICATION; }
+    if ((clnt = get_rpc_client(host)) == NULL) { return ERROR_COMMUNICATION; }
 
     args.key = key;
     args.value1 = value1;
@@ -180,7 +181,7 @@ int modify_value(int key, char *value1, int N_value2, double *V_value2, struct C
     args.value3 = value3;
 
     result = modify_value_1(&args, clnt);
-     if (result == (int *) NULL) { /* ... error handling RPC ... */ clnt_destroy(clnt); return ERROR_COMMUNICATION; }
+     if (result == (int *) NULL) { clnt_destroy(clnt); return ERROR_COMMUNICATION; }
 
     int retval = *result;
     clnt_destroy(clnt);

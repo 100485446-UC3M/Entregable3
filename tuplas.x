@@ -35,4 +35,4 @@ program TUPLAS_PROG {
         int MODIFY_VALUE(set_modify_args) = 5;
 
     } = 1; /* Número de versión */
-} = 0x20000001; /* Número de programa (elegir uno no usado) */
+} = 0x20000001; /* Número de programa */

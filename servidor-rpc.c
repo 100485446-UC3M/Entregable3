@@ -6,6 +6,22 @@ pthread_mutex_t mutex2;
 pthread_cond_t cond;
 int busy;
 
+// Estructura para pasar datos al hilo
+struct thread_data {
+    SVCXPRT *transp;
+};
+
+void *handle_request(void *arg) {
+    struct thread_data *data = (struct thread_data *)arg;
+
+    // Procesar la solicitud utilizando svc_getreqset
+    // xp_fdset es un descriptores de archivo
+    svc_getreqset(data->transp->xp_fdset);
+
+    free(data);
+    pthread_exit(NULL);
+}
+
 //Implementación de los procedimientos _svc generados por rpcgen 
 //Se espera el formato <nombre_procedimiento>_<numero_version>_svc
 int * destroy_1_svc(void *argp, struct svc_req *rqstp) {
@@ -127,19 +143,7 @@ int main (int argc, char **argv) {
 	(void)pmap_unset (TUPLAS_PROG, TUPLAS_VERS);
 
 	// Registrar el servicio con el portmapper (rpcbind)
-    // El código generado en tuplas_svc.c a menudo tiene una función main
-    // que hace esto y llama a svc_run(). Se puede usar esa o hacerlo manualmente.
 	register SVCXPRT *transp;
-	transp = svcudp_create(RPC_ANYSOCK);
-	if (transp == NULL) {
-		fprintf (stderr, "%s: cannot create udp service.\n", argv[0]);
-		exit(1);
-	}
-	if (!svc_register(transp, TUPLAS_PROG, TUPLAS_VERS, tuplas_prog_1, IPPROTO_UDP)) {
-		fprintf (stderr, "%s: unable to register (TUPLAS_PROG, TUPLAS_VERS, udp).\n", argv[0]);
-		exit(1);
-	}
-
 	transp = svctcp_create(RPC_ANYSOCK, 0, 0);
 	if (transp == NULL) {
 		fprintf (stderr, "%s: cannot create tcp service.\n", argv[0]);
@@ -151,8 +155,35 @@ int main (int argc, char **argv) {
 	}
 
     printf("SERVIDOR RPC: Servicio registrado y esperando peticiones.\n");
-	// Entrar en el bucle de atención de RPCs
-	svc_run (); // Esta función nunca retorna normalmente
-	fprintf (stderr, "%s: svc_run returned\n", argv[0]);
-	exit (1);  /* should never reach here */
+	// Bucle personalizado para manejar solicitudes
+    fd_set readfds;
+    while (1) {
+        readfds = svc_fdset;
+
+        // Esperar solicitudes
+        int retval = select(FD_SETSIZE, &readfds, NULL, NULL, NULL);
+        if (retval == -1) {
+            perror("select");
+            exit(1);
+        }
+
+        // Crear un hilo para manejar cada solicitud
+        struct thread_data *data = malloc(sizeof(struct thread_data));
+        if (data == NULL) {
+            fprintf(stderr, "Error al asignar memoria para thread_data.\n");
+            continue;
+        }
+        data->transp = transp;
+        pthread_t thread;
+        if (pthread_create(&thread, NULL, handle_request, (void *)data) != 0) {
+            fprintf(stderr, "Error al crear el hilo.\n");
+            free(data);
+            continue;
+        }
+
+        // Desvincular el hilo para que se limpie automáticamente al terminar
+        pthread_detach(thread);
+    }
+
+    return 0;
 }
